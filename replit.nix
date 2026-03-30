@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.nano
     pkgs.mesa
     pkgs.xorg.libxcb
     pkgs.xorg.libXrandr
