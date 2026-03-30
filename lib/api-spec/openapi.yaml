@@ -1,0 +1,206 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: WhatsApp Group Broadcaster API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: whatsapp
+    description: WhatsApp bot operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /whatsapp/status:
+    get:
+      operationId: getWhatsappStatus
+      tags: [whatsapp]
+      summary: Get WhatsApp connection status
+      description: Returns current bot connection status and QR code if needed
+      responses:
+        "200":
+          description: Status returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhatsappStatus"
+  /whatsapp/groups:
+    get:
+      operationId: getWhatsappGroups
+      tags: [whatsapp]
+      summary: Get all WhatsApp groups
+      description: Returns list of all WhatsApp groups the account is in
+      responses:
+        "200":
+          description: Groups returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupsResponse"
+  /whatsapp/broadcast:
+    post:
+      operationId: broadcastMessage
+      tags: [whatsapp]
+      summary: Broadcast message to all groups
+      description: Sends a message to all WhatsApp groups and tracks delivery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BroadcastRequest"
+      responses:
+        "200":
+          description: Broadcast result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BroadcastResult"
+  /whatsapp/disconnect:
+    post:
+      operationId: disconnectWhatsapp
+      tags: [whatsapp]
+      summary: Disconnect WhatsApp session
+      description: Logs out and disconnects the WhatsApp session
+      responses:
+        "200":
+          description: Disconnected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisconnectResult"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    WhatsappStatus:
+      type: object
+      properties:
+        state:
+          type: string
+          enum: [initializing, qr_ready, pairing, authenticated, ready, disconnected]
+        qrCode:
+          type: string
+          nullable: true
+          description: Base64 data URL of the QR code image when state is qr_ready
+        pairingCode:
+          type: string
+          nullable: true
+          description: 8-character pairing code when state is pairing
+        phoneNumber:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        groupCount:
+          type: integer
+          nullable: true
+      required:
+        - state
+    GroupsResponse:
+      type: object
+      properties:
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/WhatsappGroup"
+      required:
+        - groups
+    WhatsappGroup:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        participantCount:
+          type: integer
+      required:
+        - id
+        - name
+        - participantCount
+    BroadcastRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          description: The message to broadcast to all groups
+        groupIds:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Optional list of specific group IDs to send to. If null, sends to all groups.
+      required:
+        - message
+    BroadcastResult:
+      type: object
+      properties:
+        total:
+          type: integer
+        sent:
+          type: integer
+        failed:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupSendResult"
+      required:
+        - total
+        - sent
+        - failed
+        - results
+    GroupSendResult:
+      type: object
+      properties:
+        groupId:
+          type: string
+        groupName:
+          type: string
+        success:
+          type: boolean
+        messageId:
+          type: string
+          nullable: true
+        error:
+          type: string
+          nullable: true
+        acked:
+          type: boolean
+          nullable: true
+          description: True if message received double ticks (delivered to server)
+      required:
+        - groupId
+        - groupName
+        - success
+    DisconnectResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
