@@ -11,15 +11,11 @@ services:
       - key: NODE_ENV
         value: production
       - key: BAILEYS_AUTH_PATH
-        value: /persist/sessions
+        value: /app/sessions
       - key: DATABASE_URL
         fromDatabase:
           name: lucky-db
           property: connectionString
-    disk:
-      name: lucky-sessions
-      mountPath: /persist
-      sizeGB: 1
 
 databases:
   - name: lucky-db
