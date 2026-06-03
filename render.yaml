@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: pnpm install && pnpm run build
+    buildCommand: pnpm install && pnpm -r --if-present run build
     startCommand: node --enable-source-maps ./dist/index.mjs
     rootDir: .
     envVars:
